@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+  namespace: app
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi             # 💾 Database ko 5 GB ki space milegi
+  accessModes:
+    - ReadWriteOnce          # Is volume ko ek baar mein ek hi pod use kar sakta hai
+  hostPath:
+    path: "/mnt/data"        # 📁 Yeh aapki VM/Minikube ke andar ka folder path hai jahan data rahega
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+  namespace: app            # 👈 Is naam ko yaad rakhna, yahi database mein link hoga
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi           # 5GB mein se humne 2GB database ke liye claim/book kar liya
+

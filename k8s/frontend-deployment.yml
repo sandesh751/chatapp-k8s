@@ -1,0 +1,28 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: frontend-deployment
+  namespace: app
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: trainwithshubham/chatapp-frontend
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          env:
+           - name: NODE_ENV
+             value: "production" 
+
+
