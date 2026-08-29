@@ -13,6 +13,8 @@ jobs:
       # Step 1: GitHub se code runner machine par lana
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # SonarQube history tracking ke liye zaroori hai
 
       # Step 2: [DevSecOps] Pure repository ke core code aur dependencies ka file scan
       - name: Run Trivy FS (Code) Scan
@@ -22,6 +24,12 @@ jobs:
           scan-ref: '.'
           exit-code: '0' # Warning dega par pipeline pass ho jayegi
           severity: 'CRITICAL,HIGH'
+      # java 21 setup for sonarQube
+      - name: Setup Java 21 for SonarQube
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # Standard highly compatible production distribution
+          java-version: '21'
         # sonarQube scan
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@v2
