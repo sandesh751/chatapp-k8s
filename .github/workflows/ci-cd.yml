@@ -80,3 +80,38 @@ jobs:
       # Step 9: Backend Image ko Docker Hub Registry par final upload/push karna
       - name: Push Backend Docker Image to Docker Hub
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:latest
+  # --- JOB 2: CD (Kubernetes Manifests Deployment to Kind via GCP VM) ---
+  deploy-to-kind:
+    runs-on: ubuntu-latest
+    needs: ci-security-and-push # Job 1 pass hone ke baad hi chalega
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.JSON_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: SSH to GCP VM & Deploy on Kind
+        uses: google-github-actions/ssh-compute@v2
+        with:
+          instance_name: instance-20260826-152012
+          zone: us-central1-a
+          ssh_private_key: ${{ secrets.KEY }}
+          command: |
+            # 1. VM ke andar aapke project folder me jana jahan manifests hain
+            cd /home/sandeshsaini7983637650/django-notes-app || cd /root/django-notes-app
+            
+            # 2. GitHub se naye manifests pull karna
+            git pull origin main
+            
+            # 3. Aapke banaye hue manifests ke andar dynamic commit SHA tag replace karna
+            sed -i "s|image: .*note-app-frontend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:latest|g" ./k8s/*.yaml || true
+            sed -i "s|image: .*note-app-backend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:latest|g" ./k8s/*.yaml || true
+            
+            # 4. Aapki pehle se bani hui files ko Kind K8s cluster par apply karna
+            kubectl apply -f ./k8s
