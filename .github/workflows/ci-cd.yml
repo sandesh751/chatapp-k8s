@@ -31,13 +31,19 @@ jobs:
           distribution: 'temurin' # Standard highly compatible production distribution
           java-version: '21'
         # sonarQube scan
+            # 🔥 Step 3: Native CLI SonarQube Scanner (Fixed Download Mechanism)
       - name: Run SonarQube Scanner CLI
         run: |
-          # Pehle official SonarScanner CLI client utility download karein
-          wget -q https://sonarsource.com
-          unzip -q sonar-scanner-cli-5.0.1.3006-linux.zip
+          # 1. Unzip dependency ensure karna runner computer par
+          sudo apt-get update && sudo apt-get install -y unzip
+
+          # 2. Curl se stable secure binary direct stream request download karna
+          curl -sSLo sonar-scanner-cli.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+
+          # 3. Zip file extract karna cleanly
+          unzip -q sonar-scanner-cli.zip
           
-          # Scanner binary executable execute parameters configuration
+          # 4. Scanner binary parameters properly inject and scan execute
           ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
             -Dsonar.host.url="${{ secrets.SONAR_HOST_URL }}" \
             -Dsonar.token="${{ secrets.SONAR_TOKEN }}" \
@@ -45,6 +51,7 @@ jobs:
             -Dsonar.projectName="chatapp-k8s-project" \
             -Dsonar.sources="." \
             -Dsonar.exclusions="**/node_modules/**,**/dist/**,**/k8s/**"
+
        
 
       # Step 3: Docker Hub account se connect/login karna
