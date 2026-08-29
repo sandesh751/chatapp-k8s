@@ -122,12 +122,10 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
       - name: SSH and Deploy to Kind Cluster
         run: |
-          # VM ke system security configurations ko override karne ke liye standard flag mapping
           gcloud compute ssh instance-20260826-152012 \
             --zone="us-central1-a" \
             --quiet \
             --tunnel-through-iap \
-            --metadata="block-project-ssh-keys=FALSE" \
             --command="
               sudo bash -c '
                 cd /home/sandeshsaini7983637650/chatapp-k8s || cd /root/chatapp-k8s || exit 1
@@ -143,5 +141,6 @@ jobs:
                 kubectl apply -f ./k8s/
               '
             "
+
 
 
