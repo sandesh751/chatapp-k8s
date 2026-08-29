@@ -44,7 +44,6 @@ jobs:
             -Dsonar.projectName=chatapp-k8s-project
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/k8s/**
-            # --- 🔥 TIMEOUT FIX: Network boundary badhane ke liye lines ---
             -Dsonar.ws.timeout=300
             -Dsonar.scanner.connectTimeout=300000
             -Dsonar.scanner.socketTimeout=300000
