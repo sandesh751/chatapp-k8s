@@ -98,14 +98,8 @@ jobs:
 
       - name: SSH to GCP VM & Deploy on Kind
         run: |
-          # 1. SSH key ko secure tarike se runner computer par set karna
-          echo "${{ secrets.KEY }}" > private_key.pem
-          chmod 600 private_key.pem
-
-          # 2. Native Google Cloud utility script command
-          gcloud compute ssh instance-20260826-152012 \
+           gcloud compute ssh instance-20260826-152012 \
             --zone="us-central1-a" \
-            --ssh-key-file="./private_key.pem" \
             --quiet \
             --tunnel-through-iap \
             --command="
