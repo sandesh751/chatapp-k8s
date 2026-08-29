@@ -122,11 +122,14 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
       - name: SSH and Deploy to Kind Cluster
         run: |
-          # 1. GitHub secret se private key utha kar runner computer par save karna
+          # 1. Private key generate karna aur use strict permissions dena
           echo "${{ secrets.KEY }}" > private_key.pem
           chmod 600 private_key.pem
 
-          # 2. Dynamic Gcloud native utility command without metadata dependency
+          # 2. 🔥 THE FIX: Private key se gcloud ke liye required public key (.pub) banana
+          ssh-keygen -y -f private_key.pem > private_key.pem.pub
+
+          # 3. Ab gcloud chupchaap bina prompt ke execute ho jayega
           gcloud compute ssh instance-20260826-152012 \
             --zone="us-central1-a" \
             --quiet \
@@ -147,6 +150,7 @@ jobs:
                 kubectl apply -f ./k8s/
               '
             "
+
 
 
 
