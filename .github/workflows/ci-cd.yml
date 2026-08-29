@@ -103,8 +103,10 @@ jobs:
           zone: us-central1-a
           ssh_private_key: ${{ secrets.KEY }}
           command: |
+            sudo bash -c "
             cd /home/sandeshsaini7983637650/chatapp-k8s || cd /root/chatapp-k8s
             git pull origin main
             sed -i "s|image: .*note-app-frontend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:${{ github.sha }}|g" ./k8s/*.yaml || true
             sed -i "s|image: .*note-app-backend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:${{ github.sha }}|g" ./k8s/*.yaml || true
             kubectl apply -f ./k8s/
+            "
