@@ -114,19 +114,18 @@ jobs:
 
       - name: SSH and Deploy to Kind Cluster
         run: |
-          # SSH Keys Generation
+          # 1. Private key setup aur strict public key (.pub) map generate karna
           echo "${{ secrets.KEY }}" > private_key.pem
           chmod 600 private_key.pem
           ssh-keygen -y -f private_key.pem > private_key.pem.pub
-          # 2. Connection timeout extensions binding taaki propagation wait limits increase ho sakein
-          gcloud config set compute/ssh_connection_timeout 120
 
-          # Secure Tunnel Deployment Command Execution
+          # 2. 🔥 THE FIX: Direct ssh-flag bypass mapping bina kisi unrecognized properties ke
           gcloud compute ssh instance-20260826-152012 \
             --zone="us-central1-a" \
             --quiet \
             --tunnel-through-iap \
             --ssh-key-file="./private_key.pem" \
+            --ssh-flag="-o ConnectTimeout=120" \
             --command="
               sudo bash -c '
                 cd /home/sandeshsaini7983637650/chatapp-k8s || cd /root/chatapp-k8s || exit 1
@@ -138,7 +137,8 @@ jobs:
                 sed -i \"s|image: .*note-app-backend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:${{ github.sha }}|g\" ./k8s/*.*ml || true
                 
                 kubectl apply -f ./k8s/namespace.yml || kubectl create namespace app --dry-run=client -o yaml | kubectl apply -f -
-                sleep 3
+                sleep 5
                 kubectl apply -f ./k8s/
               '
             "
+
