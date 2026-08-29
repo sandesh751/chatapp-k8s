@@ -112,8 +112,8 @@ jobs:
                 git pull origin main
                 
                 # Manifest tags replace karna safely
-                sed -i \"s|image: .*note-app-frontend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:${{ github.sha }}|g\" ./k8s/*.yaml || true
-                sed -i \"s|image: .*note-app-backend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:${{ github.sha }}|g\" ./k8s/*.yaml || true
+                sed -i \"s|image: .*note-app-frontend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:${{ github.sha }}|g\" ./k8s/*.yml || true
+                sed -i \"s|image: .*note-app-backend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:${{ github.sha }}|g\" ./k8s/*.yml || true
                 
                 # Kind/Kubernetes par manifests apply karna
                 kubectl apply -f ./k8s
