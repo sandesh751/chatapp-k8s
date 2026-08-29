@@ -1,4 +1,4 @@
-name: DevSecOps-K8s-Multi-Container-Pipeline
+name: CI-Security-Pipeline-Only
 
 on:
   push:
@@ -6,106 +6,77 @@ on:
       - main
 
 jobs:
-  # --- JOB 1: CI, DOUBLE SECURITY SCAN & PUSH FOR BOTH ---
+  # --- STAGE 1: FULL CI & DOUBLE SECURITY SCAN & PUSH ---
   ci-security-and-push:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: GitHub se code runner machine par lana
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 1. Whole Repo Code Scan (Trivy)
+      # Step 2: [DevSecOps] Pure repository ke core code aur dependencies ka file scan
       - name: Run Trivy FS (Code) Scan
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           scan-ref: '.'
-          exit-code: '0'
+          exit-code: '0' # Warning dega par pipeline pass ho jayegi
           severity: 'CRITICAL,HIGH'
 
-      # 2. Docker Hub Login
+      # Step 3: Docker Hub account se connect/login karna
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ==================== FRONTEND BUILD & SCAN ====================
-      - name: Build Frontend Docker Image
+      # ==================== FRONTEND PIPELINE ====================
+      
+      # Step 4: Frontend ki Docker Image banana (Local runner me load hogi)
+      - name: Build Frontend Docker Image Locally
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend # <--- Yahan frontend folder ka path aayega
-          file: ./frontend/Dockerfile # <--- Frontend ki Dockerfile ka path
+          context: ./frontend
+          file: ./frontend/Dockerfile
           push: false
           load: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:${{ github.sha }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:latest
 
+      # Step 5: [DevSecOps] Bani hui Frontend Image ke andar ka security scan
       - name: Run Trivy Frontend Image Scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:${{ github.sha }}'
+          image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:latest'
           scan-type: 'image'
           exit-code: '0'
           severity: 'CRITICAL,HIGH'
 
-      - name: Push Frontend Docker Image
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:${{ github.sha }}
+      # Step 6: Frontend Image ko Docker Hub Registry par final upload/push karna
+      - name: Push Frontend Docker Image to Docker Hub
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:latest
 
 
-      # ==================== BACKEND BUILD & SCAN ====================
-      - name: Build Backend Docker Image
+      # ==================== BACKEND PIPELINE ====================
+      
+      # Step 7: Backend ki Docker Image banana (Local runner me load hogi)
+      - name: Build Backend Docker Image Locally
         uses: docker/build-push-action@v5
         with:
-          context: ./backend # <--- Yahan backend folder ka path aayega
-          file: ./backend/Dockerfile # <--- Backend ki Dockerfile ka path
+          context: ./backend
+          file: ./backend/Dockerfile
           push: false
           load: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:${{ github.sha }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:latest
 
+      # Step 8: [DevSecOps] Bani hui Backend Image ke andar ka security scan
       - name: Run Trivy Backend Image Scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:${{ github.sha }}'
+          image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:latest'
           scan-type: 'image'
           exit-code: '0'
           severity: 'CRITICAL,HIGH'
 
-      - name: Push Backend Docker Image
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:${{ github.sha }}
-
-  # --- JOB 2: CD (Kubernetes Manifests Deployment) ---
-  deploy-to-k8s:
-    runs-on: ubuntu-latest
-    needs: ci-security-and-push
-    steps:
-      - name: Checkout Manifests
-        uses: actions/checkout@v4
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.JSON_KEY }}
-
-      - name: Get GKE Cluster Credentials
-        uses: google-github-actions/get-gke-credentials@v2
-        with:
-          cluster_name: instance-20260826-152012
-          location: us-central1-a
-
-      # Fixed: Dono manifests (frontend aur backend) ke andar image tags update karna
-      - name: Update Image Tags in Manifests & Apply
-        run: |
-          # Agar alag-alag deployment files hain toh dono me update karenge
-          # Maan lete hain files ka naam 'frontend-deployment.yaml' aur 'backend-deployment.yaml' hai
-          
-          if [ -f frontend-deployment.yaml ]; then
-            sed -i "s|image: .*note-app-frontend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:${{ github.sha }}|g" frontend-deployment.yaml
-            kubectl apply -f frontend-deployment.yaml
-          fi
-          
-          if [ -f backend-deployment.yaml ]; then
-            sed -i "s|image: .*note-app-backend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:${{ github.sha }}|g" backend-deployment.yaml
-            kubectl apply -f backend-deployment.yaml
-          fi
-          
-          # Agar aapka service.yaml hai toh use bhi apply kar dein
-          kubectl apply -f service.yaml --ignore-not-found=true
+      # Step 9: Backend Image ko Docker Hub Registry par final upload/push karna
+      - name: Push Backend Docker Image to Docker Hub
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:latest
