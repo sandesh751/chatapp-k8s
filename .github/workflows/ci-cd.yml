@@ -122,10 +122,16 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
       - name: SSH and Deploy to Kind Cluster
         run: |
+          # 1. GitHub secret se private key utha kar runner computer par save karna
+          echo "${{ secrets.KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+          # 2. Dynamic Gcloud native utility command without metadata dependency
           gcloud compute ssh instance-20260826-152012 \
             --zone="us-central1-a" \
             --quiet \
             --tunnel-through-iap \
+            --ssh-key-file="./private_key.pem" \
             --command="
               sudo bash -c '
                 cd /home/sandeshsaini7983637650/chatapp-k8s || cd /root/chatapp-k8s || exit 1
@@ -141,6 +147,7 @@ jobs:
                 kubectl apply -f ./k8s/
               '
             "
+
 
 
 
