@@ -31,18 +31,21 @@ jobs:
           distribution: 'temurin' # Standard highly compatible production distribution
           java-version: '21'
         # sonarQube scan
-      - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@v2
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # SonarQube dashboard se generate kiya hua token
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} # Aapke SonarQube server ka IP/URL (e.g., http://your-vm-ip:9000)
-        with:
-          # Agar aapko frontend aur backend dono ko ek sath scan karna hai
-          args: >
-            -Dsonar.projectKey=chatapp-monorepo
-            -Dsonar.projectName=chatapp-k8s-project
-            -Dsonar.sources=.
-            -Dsonar.exclusions=**/node_modules/**,**/dist/**
+      - name: Run SonarQube Scanner CLI
+        run: |
+          # Pehle official SonarScanner CLI client utility download karein
+          wget -q https://sonarsource.com
+          unzip -q sonar-scanner-cli-5.0.1.3006-linux.zip
+          
+          # Scanner binary executable execute parameters configuration
+          ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
+            -Dsonar.host.url="${{ secrets.SONAR_HOST_URL }}" \
+            -Dsonar.token="${{ secrets.SONAR_TOKEN }}" \
+            -Dsonar.projectKey="chatapp-monorepo" \
+            -Dsonar.projectName="chatapp-k8s-project" \
+            -Dsonar.sources="." \
+            -Dsonar.exclusions="**/node_modules/**,**/dist/**,**/k8s/**"
+       
 
       # Step 3: Docker Hub account se connect/login karna
       - name: Login to Docker Hub
