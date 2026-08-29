@@ -104,7 +104,7 @@ jobs:
           ssh_private_key: ${{ secrets.KEY }}
           command: |
             # 1. VM ke andar aapke project folder me jana jahan manifests hain
-            cd /home/sandeshsaini7983637650/django-notes-app || cd /root/django-notes-app
+            cd /home/sandeshsaini7983637650/chatapp-k8s || cd /root/chatapp-k8s
             
             # 2. GitHub se naye manifests pull karna
             git pull origin main
