@@ -118,6 +118,8 @@ jobs:
           echo "${{ secrets.KEY }}" > private_key.pem
           chmod 600 private_key.pem
           ssh-keygen -y -f private_key.pem > private_key.pem.pub
+          # 2. Connection timeout extensions binding taaki propagation wait limits increase ho sakein
+          gcloud config set compute/ssh_connection_timeout 120
 
           # Secure Tunnel Deployment Command Execution
           gcloud compute ssh instance-20260826-152012 \
