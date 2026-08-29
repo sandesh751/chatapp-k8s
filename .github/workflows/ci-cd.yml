@@ -117,28 +117,28 @@ jobs:
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
-
-      - name: SSH to GCP VM & Deploy on Kind
+      - name: SSH and Deploy to Kind Cluster
         run: |
-           gcloud compute ssh instance-20260826-152012 \
+          # VM ke system security configurations ko override karne ke liye standard flag mapping
+          gcloud compute ssh instance-20260826-152012 \
             --zone="us-central1-a" \
             --quiet \
             --tunnel-through-iap \
+            --metadata="block-project-ssh-keys=FALSE" \
             --command="
-              # Permission issue fix karne ke liye sudo bash block ka use
               sudo bash -c '
                 cd /home/sandeshsaini7983637650/chatapp-k8s || cd /root/chatapp-k8s || exit 1
                 
-                # Git pull default owner bankar chalayein taaki config secure rahe
                 git config --global --add safe.directory \"\$(pwd)\"
                 git pull origin main
                 
-                # Manifest tags replace karna safely
-                sed -i \"s|image: .*note-app-frontend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:${{ github.sha }}|g\" ./k8s/*.yml || true
-                sed -i \"s|image: .*note-app-backend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:${{ github.sha }}|g\" ./k8s/*.yml || true
+                sed -i \"s|image: .*note-app-frontend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-frontend:${{ github.sha }}|g\" ./k8s/*.*ml || true
+                sed -i \"s|image: .*note-app-backend.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/note-app-backend:${{ github.sha }}|g\" ./k8s/*.*ml || true
                 
-                # Kind/Kubernetes par manifests apply karna
-                kubectl apply -f ./k8s
+                kubectl apply -f ./k8s/namespace.yml || kubectl create namespace app --dry-run=client -o yaml | kubectl apply -f -
+                sleep 3
+                kubectl apply -f ./k8s/
               '
             "
+
 
