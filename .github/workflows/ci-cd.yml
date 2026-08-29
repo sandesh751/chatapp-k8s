@@ -25,34 +25,25 @@ jobs:
           exit-code: '0' # Warning dega par pipeline pass ho jayegi
           severity: 'CRITICAL,HIGH'
       # java 21 setup for sonarQube
-      - name: Setup Java 21 for SonarQube
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin' # Standard highly compatible production distribution
+          distribution: 'temurin'
           java-version: '21'
-        # sonarQube scan
-            # 🔥 Step 3: Native CLI SonarQube Scanner (Fixed Download Mechanism)
-      - name: Run SonarQube Scanner CLI
-        run: |
-          # 1. Unzip dependency ensure karna runner computer par
-          sudo apt-get update && sudo apt-get install -y unzip
-
-          # 2. Curl se stable secure binary direct stream request download karna
-          curl -sSLo sonar-scanner-cli.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-
-          # 3. Zip file extract karna cleanly
-          unzip -q sonar-scanner-cli.zip
-          
-          # 4. Scanner binary parameters properly inject and scan execute
-          ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
-            -Dsonar.host.url="${{ secrets.SONAR_HOST_URL }}" \
-            -Dsonar.token="${{ secrets.SONAR_TOKEN }}" \
-            -Dsonar.projectKey="chatapp-monorepo" \
-            -Dsonar.projectName="chatapp-k8s-project" \
-            -Dsonar.sources="." \
-            -Dsonar.exclusions="**/node_modules/**,**/dist/**,**/k8s/**"
-
-       
+      # sonarQubescan
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          # Yeh line container ke andar direct Java 21 path pass kar degi, error nahi aayega
+          SONAR_SCANNER_JAVA_EXE: /opt/hostedtoolcache/Java_temurin-beta_bundle/21.0.0/x64/bin/java
+        with:
+          args: >
+            -Dsonar.projectKey=chatapp-monorepo
+            -Dsonar.projectName=chatapp-k8s-project
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/k8s/**       
 
       # Step 3: Docker Hub account se connect/login karna
       - name: Login to Docker Hub
