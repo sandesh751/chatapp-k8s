@@ -43,7 +43,11 @@ jobs:
             -Dsonar.projectKey=chatapp-monorepo
             -Dsonar.projectName=chatapp-k8s-project
             -Dsonar.sources=.
-            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/k8s/**       
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/k8s/**
+            # --- 🔥 TIMEOUT FIX: Network boundary badhane ke liye lines ---
+            -Dsonar.ws.timeout=300
+            -Dsonar.scanner.connectTimeout=300000
+            -Dsonar.scanner.socketTimeout=300000
 
       # Step 3: Docker Hub account se connect/login karna
       - name: Login to Docker Hub
